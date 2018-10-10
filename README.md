@@ -1,12 +1,12 @@
 ## Run
 
 ```
-ansible-playbook -i aws demo.yaml
+ansible-playbook -i inventories/aws playbooks/cluster-up.yaml 
 ```
 
 ## Parameters
 
-To edit values relative to AWS instances, see host_vars/ec2-deploy.yaml
+To edit values relative to AWS instances, see playbooks/host_vars/ec2-deploy.yaml
 
 ## Configuration
 #### Make ssh key accessible to ansible
