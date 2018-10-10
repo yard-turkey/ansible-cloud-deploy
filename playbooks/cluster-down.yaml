@@ -1,5 +1,8 @@
-- hosts: tag_Name_jcope_demo
+# WIP
+- hosts: "tag_Name_{{ tag_name }}"
   gatherfacts: True
   
   tasks:
-  - name: 
+  - name: debug
+    ping:
+      

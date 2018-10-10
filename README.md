@@ -8,6 +8,8 @@ ansible-playbook -i inventories/aws playbooks/cluster-up.yaml
 
 To edit values relative to AWS instances, see playbooks/host_vars/ec2-deploy.yaml
 
+At the very least, set the `tag_name` value to something other than the current value. 
+
 ## Configuration
 #### Make ssh key accessible to ansible
   - $ eval ssh-agent && ssh-add ~/.ssh/<key>
