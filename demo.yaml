@@ -44,6 +44,6 @@
   gather_facts: True
 
   tasks:
-  - name: check ntp service
+  - name: check docker service
     become: yes
     service: name=docker state=started
