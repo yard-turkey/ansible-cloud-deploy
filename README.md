@@ -1,14 +1,12 @@
 ## Run
 
 ```
-ansible-playbook -i inventories/aws playbooks/cluster-up.yaml 
+ansible-playbook -i inventories/aws playbooks/cluster-up.yaml -e "tag_name=<some name>"
 ```
 
 ## Parameters
 
 To edit values relative to AWS instances, see playbooks/host_vars/ec2-deploy.yaml
-
-At the very least, set the `tag_name` value to something other than the current value. 
 
 ## Configuration
 #### Make ssh key accessible to ansible
@@ -24,4 +22,4 @@ At the very least, set the `tag_name` value to something other than the current 
    - https://docs.ansible.com/ansible/2.6/user_guide/intro_dynamic_inventory.html#static-groups-of-dynamic-groups
    
 #### Test ec2.py
-   - $ ansible -u ec2-user -m ping tag_Name_jcope_demo
+   - $ ansible -u ec2-user -m ping tag_Name_your_tag_name
