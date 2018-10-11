@@ -1,8 +1,13 @@
-# WIP
-- hosts: "tag_Name_{{ tag_name }}"
-  gatherfacts: True
-  
+- hosts: localhost
+  connection: local
+  gather_facts: false
+
   tasks:
-  - name: debug
-    ping:
-      
+    - ec2_instance_facts:
+        filters:
+          "tag:Name": ansible-cluster-deploy-demo
+
+    - name: terminate matching ec2 instances
+      ec2:
+        state: absent
+        instance_ids: "{{ hostvars[host]['ec2_id'] }}"
