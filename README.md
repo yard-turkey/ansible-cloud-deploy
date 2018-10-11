@@ -14,7 +14,7 @@ To edit values relative to AWS instances, see playbooks/host_vars/ec2-deploy.yam
 #### Setup AWS keys
   - (https://docs.ansible.com/ansible/2.6/scenario_guides/guide_aws.html#authentication)
   - $ export AWS_ACCESS_KEY_ID='AK123'
-	- $ export AWS_SECRET_ACCESS_KEY='abc123'
+  - $ export AWS_SECRET_ACCESS_KEY='abc123'
 #### Config env for ec2.py (dynamic inventory)
   - https://aws.amazon.com/blogs/apn/getting-started-with-ansible-and-dynamic-amazon-ec2-inventory-management/
 
