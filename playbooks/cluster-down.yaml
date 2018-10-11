@@ -1,8 +1,24 @@
 # WIP
-- hosts: "tag_Name_{{ tag_name }}"
-  gatherfacts: True
-  
+- hosts: "tag_Name_{{ tag_name }}" 
+  name: Shutdown
+  gather_facts: false
+
   tasks:
-  - name: debug
-    ping:
-      
+  - meta: refresh_inventory
+  - include_vars:
+      file: "host_vars/localhost.yaml"
+  - name: stopping instances 
+    ec2:
+      instance_id: "{{ ec2_id }}"
+      region: "{{ region }}"
+      state: stopped
+      wait: true
+    delegate_to: localhost
+
+  - name: untagging instances
+    ec2_tag:
+      resource: "{{ ec2_id }}"
+      region: "{{ region }}"
+      tags:
+        Name: "terminate"
+    delegate_to: localhost
