@@ -1,4 +1,6 @@
-# WIP
+# Stop target ec2 instances and mark them for deletion.
+# No dependency on ec2.py or ec2.ini
+
 - hosts: localhost 
   name: Shutdown
   gather_facts: false
@@ -10,8 +12,6 @@
       region: "{{ region }}"
     register: ec2_facts
 
-  - debug: "msg={{ ec2_facts }}"
-
   - name: stopping instances 
     ec2:
       region: "{{ region }}"
@@ -20,7 +20,7 @@
       wait: true
     loop: "{{ ec2_facts.instances }}"
 
-  - name: untagging instances
+  - name: marking instances for deletion
     ec2_tag:
       resource: "{{ item.instance_id }}"
       region: "{{ region }}"
