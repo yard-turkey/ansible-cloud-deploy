@@ -4,3 +4,5 @@ ami_id: ami-046a7ae55d7ca9cee #screeley-ocp311-base3
 machine_type: t2.large
 sec_group_id: sg-0cee6560b4bf47f6e #default
 subnet_id: subnet-06686f4cf356cc45a #jcope-workspace
+num_nodes: 3
+ssh_key: libra
