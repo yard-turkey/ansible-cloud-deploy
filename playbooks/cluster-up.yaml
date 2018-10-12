@@ -2,9 +2,9 @@
   gather_facts: False
 
   tasks:
-  - name: provision instances
+  - name: spin up instances
     ec2:
-      key_name: libra
+      key_name: "{{ ssh_key }}"
       group_id: "{{ sec_group_id }}" 
       ec2_region: "{{ region  }}" 
       ec2_zone: "{{ zone }}"
@@ -12,34 +12,32 @@
       vpc_subnet_id: "{{ subnet_id }}"
       image: "{{ ami_id }}"
       wait: true
-      exact_count: 2 
+      exact_count: "{{ num_nodes }}" 
       count_tag:
         Name: "{{ tag_name }}"
       instance_tags:
         Name: "{{ tag_name }}"
     register: ec2
 
-  - name: add instances to host group
-    add_host:
+  - add_host:
       hostname: "{{ item.public_ip }}"
       groups: ec2hosts
     loop: "{{ ec2.instances }}"
 
 - hosts: ec2hosts
   name: wait for ssh to come up
-  remote_user: "{{ ssh_user }}"
+  remote_user: "{{ ssh_login }}"
   gather_facts: false
   
   tasks:
-  - name: wait for ssh to come up 
-    wait_for_connection:
+  - wait_for_connection:
       delay: 20
       timeout: 120 
 
 # Everything after this can be modified to our needs. 
 - hosts: ec2hosts
   name: configuration
-  remote_user:  "{{ ssh_user }}"
+  remote_user:  "{{ ssh_login }}"
   gather_facts: True
 
   tasks:

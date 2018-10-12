@@ -1,1 +1,0 @@
-ec2-deploy ansible_connection=local
