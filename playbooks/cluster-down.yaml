@@ -24,7 +24,7 @@
     ec2_tag:
       resource: "{{ item.instance_id }}"
       region: "{{ region }}"
-      state: list
+      state: present 
       tags:
         Name: "terminate"
     loop: "{{ ec2_facts.instances }}"
