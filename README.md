@@ -10,7 +10,7 @@ To edit values relative to AWS instances, see playbooks/host_vars/ec2-deploy.yam
 
 ## Configuration
 #### Make ssh key accessible to ansible
-  - $ eval ssh-agent && ssh-add ~/.ssh/<key>
+  - $ eval ssh-agent && ssh-add ~/.ssh/your-key
 #### Setup AWS keys
   - (https://docs.ansible.com/ansible/2.6/scenario_guides/guide_aws.html#authentication)
   - $ export AWS_ACCESS_KEY_ID='AK123'
