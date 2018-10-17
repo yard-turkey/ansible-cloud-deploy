@@ -8,7 +8,7 @@ Do the following configuration steps on whichever machine is running the playboo
 
 #### Install python dep
 
-  - `pip install boto`
+  - `$ sudo pip install boto`
 
 #### Make ssh key accessible to ansible
 
