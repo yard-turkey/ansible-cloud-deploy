@@ -97,14 +97,12 @@
       replace: "{{ hostvars[inventory_hostname].private_dns_name }}"
 
   - name: deploy ocp 3.11 (10~20 minutes)
-    shell: |
-      cd /root/openshift-ansible
-      git checkout release-3.11
-      ansible-playbook -i /root/aws-hosts /root/openshift-ansible/playbooks/deploy_cluster.yml)
+    shell: cd /root/openshift-ansible && git checkout release-3.11 && ansible-playbook -i /root/aws-hosts /root/openshift-ansible/playbooks/deploy_cluster.yml
     register: ocp_cmd
     no_log: true
     ignore_errors: true
     
-  - debug: "msg={{ ocp_cmd.stdout }}"
-    failed_when: ocp_cmd.rc != 0
+  - name: print error
+    debug: "msg={{ ocp_cmd }}"
+    failed_when: ocp_cmd.rc > 0
    
