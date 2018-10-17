@@ -2,7 +2,7 @@
 # No dependency on ec2.py or ec2.ini
 
 - hosts: localhost 
-  name: Shutdown
+  name: Gather hosts
   gather_facts: false
 
   tasks:
@@ -12,19 +12,32 @@
       region: "{{ region }}"
     register: ec2_facts
 
+  - add_host:
+      hostname: "{{ item.public_dns_name }}"
+      id: "{{ item.instance_id }}"
+      region: "{{ region }}"
+      group: ec2hosts
+    loop: "{{ ec2_facts.instances }}"
+
+
+- hosts: ec2hosts
+  name: Shutdown hosts
+  gather_facts: false 
+
+  tasks:
   - name: stopping instances 
     ec2:
-      region: "{{ region }}"
-      instance_id: "{{ item.instance_id }}"
+      region: "{{ hostvars[inventory_hostname].region }}"
+      instance_id: "{{ hostvars[inventory_hostname].id }}"
       state: stopped
       wait: true
-    loop: "{{ ec2_facts.instances }}"
+    delegate_to: localhost
 
   - name: marking instances for deletion
     ec2_tag:
-      resource: "{{ item.instance_id }}"
-      region: "{{ region }}"
+      resource: "{{ hostvars[inventory_hostname].id }}"
+      region: "{{ hostvars[inventory_hostname].region }}"
       state: present 
       tags:
         Name: "terminate"
-    loop: "{{ ec2_facts.instances }}"
+    delegate_to: localhost

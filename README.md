@@ -29,6 +29,7 @@ To edit values relative to AWS instances, see playbooks/host_vars/ec2-deploy.yam
 ## Ansible master configuration
 
 #### Make ssh key accessible to ansible
+
   - $ eval ssh-agent && ssh-add ~/.ssh/<key>
 
 #### Setup AWS keys
