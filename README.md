@@ -6,6 +6,10 @@ To edit values relative to AWS instances, see playbooks/host_vars/ec2-deploy.yam
 
 Do the following configuration steps on whichever machine is running the playbook.
 
+#### Install python dep
+
+  - `pip install boto`
+
 #### Make ssh key accessible to ansible
 
   - $ eval ssh-agent && ssh-add ~/.ssh/<key>
