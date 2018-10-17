@@ -18,8 +18,7 @@
       exact_count: "{{ num_nodes }}" 
       count_tag:
         Name: "{{ tag_name }}"
-      instance_tags:
-        Name: "{{ tag_name }}"
+      instance_tags: "{{ {'kubernetes.io/cluster/' ~ tag_name: tag_name, 'Name': tag_name } }}"
     register: ec2
 
   - add_host:
