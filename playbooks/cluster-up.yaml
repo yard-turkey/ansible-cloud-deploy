@@ -1,3 +1,7 @@
+# Passable Vars ('-e var=val')
+#   tag_name (Required)
+#   num_node (default: 3)
+#   install_ocp (default: true)
 - hosts: localhost 
   gather_facts: False
 
@@ -45,7 +49,13 @@
   remote_user:  "{{ ssh_login }}"
   gather_facts: True
   become: yes
-
+  vars:
+    known_hosts_path: /root/.ssh/known_hosts
+    key_path: /root/.ssh/ocp_key
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}" 
+    AWS_ACCESS_SECRET_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+ 
   tasks:
   - name: check docker service
     service: name=docker state=started
@@ -63,3 +73,29 @@
       path: "{{ dest_ocp_inventory_file }}"
       regexp: '(PRIVATE_DNS_NAME)'
       replace: "{{ hostvars[inventory_hostname].private_dns_name }}"
+
+  - name: switch to OCP 3.11
+    command: "cd /root/openshift-ansible && git checkout release-3.11"
+
+  - name: generate ssh key
+    command: "ssh-keygen -N \"\" -q -b 2048 -t rsa -f {{ key_path }}"
+    creates: "{{ key_path }}"
+
+  - file:
+      path: "{{ known_hosts_path }}"
+      state: touch
+      owner: root
+      group: root
+      mode: 0600
+
+  - debug: "msg={{ hostvars[inventory_hostname].private_dns_name }}"
+
+  - known_hosts:
+      host: "{{ hostvars[inventory_hostname].private_dns_name  }}"
+      path: "{{ known_hosts_path }}"
+      key: "{{ lookup('pipe','ssh-keyscan ' + hostvars[inventory_hostname].private_dns_name) }}"
+                
+  - name: deploy ocp 3.11 (10+ minutes)
+    command: "ansible-playbook -i /root/aws-hosts /root/openshift-ansible/playbooks/deploy_cluster.yml"
+
+
