@@ -55,6 +55,7 @@
   environment:
     AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}" 
     AWS_ACCESS_SECRET_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+    ANSIBLE_HOST_KEY_CHECKING: false
  
   tasks:
   - name: check docker service
@@ -77,25 +78,10 @@
   - name: switch to OCP 3.11
     command: "cd /root/openshift-ansible && git checkout release-3.11"
 
-  - name: generate ssh key
-    command: "ssh-keygen -N \"\" -q -b 2048 -t rsa -f {{ key_path }}"
-    creates: "{{ key_path }}"
-
-  - file:
-      path: "{{ known_hosts_path }}"
-      state: touch
-      owner: root
-      group: root
-      mode: 0600
-
-  - debug: "msg={{ hostvars[inventory_hostname].private_dns_name }}"
-
-  - known_hosts:
-      host: "{{ hostvars[inventory_hostname].private_dns_name  }}"
-      path: "{{ known_hosts_path }}"
-      key: "{{ lookup('pipe','ssh-keyscan ' + hostvars[inventory_hostname].private_dns_name) }}"
-                
   - name: deploy ocp 3.11 (10+ minutes)
     command: "ansible-playbook -i /root/aws-hosts /root/openshift-ansible/playbooks/deploy_cluster.yml"
+    register: ocp_out
+
+  - debug: "var={{ ocp_out }}"
 
 
