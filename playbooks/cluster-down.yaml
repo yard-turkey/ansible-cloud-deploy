@@ -19,7 +19,6 @@
       group: ec2hosts
     loop: "{{ ec2_facts.instances }}"
 
-
 - hosts: ec2hosts
   name: Shutdown hosts
   gather_facts: false 

@@ -1,0 +1,18 @@
+# Start all instances matching the passed-in name tag.
+# No dep on ec2.py
+# Required vars ('-e var=val'):
+#   tag_name=<instances-name>, eg. -e tag_name="jvance-demo"
+
+- hosts: localhost 
+  gather_facts: False
+
+  tasks:
+  - name: "start instances matching '{{ tag_name }}'"
+    ec2_instance:
+      key_name: "{{ ssh_key }}"
+      ec2_region: "{{ region  }}" 
+      #vpc_subnet_id: "{{ subnet_id }}"
+      state: running
+      filters:
+        "tag:Name": "{{ tag_name }}"
+      wait: true
