@@ -6,8 +6,6 @@
   gather_facts: false
 
   tasks:
-  - import_tasks: tasks/check-ssh.yaml
-
   - ec2_instance_facts:
       filters:
         "tag:Name": "{{ tag_name }}"

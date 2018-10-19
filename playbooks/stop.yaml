@@ -7,8 +7,6 @@
   gather_facts: False
 
   tasks:
-  - import_tasks: tasks/check-ssh.yaml
-
   - name: "stop instances matching '{{ tag_name }}'"
     ec2_instance:
       key_name: "{{ ssh_key }}"
