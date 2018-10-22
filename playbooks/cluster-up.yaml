@@ -1,13 +1,20 @@
-# Passable Vars ('-e var=val')
+# Passable Vars ('-e var1=val1 var2=val2')
 #   tag_name (Required)
 #   num_node (default: 3)
-#   install_ocp (default: true)
+
+# Infra play - setup aws resources
 - hosts: localhost 
   gather_facts: False
 
   tasks:
   - name: "Checking ssh-agent is running and '{{ ssh_key }}' key is loaded"
     shell: "ssh-add -l | grep {{ ssh_key | quote }}"
+    ignore_errors: true
+    register: ssh_check_cmd
+  
+  - fail:
+      msg: "SSH prerequisite check failed.  This usually occures because `$ eval $(ssh-agent) && ssh-add path/to/key` has not been run"
+    when: ssh_check_cmd.rc > 0
 
   - name: spin up instances
     ec2:
@@ -33,56 +40,51 @@
       groups: ec2hosts
     loop: "{{ ec2.instances }}"
 
+  - copy:
+      src: "{{ template_ocp_inventory_file }}"
+      dest: "{{ src_ocp_inventory_file }}"
+
+  - replace:
+      path: "{{ src_ocp_inventory_file }}"
+      regexp: '^(openshift_cloudprovider_aws_access_key=)'
+      replace: "\\1{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+
+  - replace:
+      path: "{{ src_ocp_inventory_file }}"
+      regexp: '^(openshift_cloudprovider_aws_secret_key=)'
+      replace: "\\1{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+
+  - replace:
+      path: "{{ src_ocp_inventory_file }}"
+      regexp: '^(openshift_clusterid=)'
+      replace: "\\1{{ tag_name }}"
+
+# Pre-deployment
 - hosts: ec2hosts
   name: wait for ssh to come up
   remote_user: "{{ ssh_login }}"
   gather_facts: false
-  
   tasks:
   - wait_for_connection:
       delay: 20
       timeout: 120 
 
-# Everything after this can be modified to our needs. 
+# OCP deployment
 - hosts: ec2hosts
   name: configuration
-  remote_user:  "{{ ssh_login }}"
+  remote_user: "{{ ssh_login }}"
   gather_facts: True
   become: yes
-  vars:
-    known_hosts_path: /root/.ssh/known_hosts
-    key_path: /root/.ssh/ocp_key
   environment:
-    OCP_CLUSTER_ID: "{{ tag_name }}"
+    ANSIBLE_HOST_KEY_CHECKING: false
     AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}" 
     AWS_ACCESS_SECRET_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
-    ANSIBLE_HOST_KEY_CHECKING: false
  
   tasks:
   - name: check docker service
     service: name=docker state=started
 
-  - name: Set aws access key
-    lineinfile:
-      path: /root/.bashrc
-      regexp: 'export AWS_ACCESS_KEY_ID=.*'
-      line: "export AWS_ACCESS_KEY_ID={{ lookup( 'env', 'AWS_ACCESS_KEY_ID') }}"
-
-  - name: set aws secret key
-    lineinfile:
-      path: /root/.bashrc
-      regexp: 'export AWS_SECRET_ACCESS_KEY=.*'
-      line: "export AWS_SECRET_ACCESS_KEY={{ lookup( 'env', 'AWS_SECRET_ACCESS_KEY') }}"
-
-  - name: configure ocp
-    blockinfile:
-      path: /root/.bashrc
-      insertafter: EOF
-      block: |
-        export OCP_CLUSTER_ID={{ tag_name }}
-        export ANSIBLE_HOST_KEY_CHECKING=false
-
-  - name: copy ocp anible inventory template
+  - name: send ocp inventory template to host 
     copy:
       src: "{{ src_ocp_inventory_file }}" 
       dest: "{{ dest_ocp_inventory_file }}"
@@ -90,19 +92,46 @@
       group: root
       mode: 0644
 
-  - name: configure inventory
+  - name: configure inventory host
     replace:
       path: "{{ dest_ocp_inventory_file }}"
-      regexp: '(PRIVATE_DNS_NAME)'
+      regexp: 'PRIVATE_DNS_NAME'
       replace: "{{ hostvars[inventory_hostname].private_dns_name }}"
+  
+  - name: export aws access key
+    lineinfile:
+      path: /root/.bashrc
+      regexp: 'export AWS_ACCESS_KEY_ID=.*'
+      line: "export AWS_ACCESS_KEY_ID={{ lookup( 'env', 'AWS_ACCESS_KEY_ID') }}"
 
-  - name: deploy ocp 3.11 (10~20 minutes)
-    shell: cd /root/openshift-ansible && git checkout release-3.11 && ansible-playbook -i /root/aws-hosts /root/openshift-ansible/playbooks/deploy_cluster.yml
+  - name: export aws secret key
+    lineinfile:
+      path: /root/.bashrc
+      regexp: 'export AWS_SECRET_ACCESS_KEY=.*'
+      line: "export AWS_SECRET_ACCESS_KEY={{ lookup( 'env', 'AWS_SECRET_ACCESS_KEY') }}"
+
+  - name: checkout version branch 3.11
+    shell: cd /root/openshift-ansible && git checkout release-3.11
+
+  - name: deploy ocp 3.11 (30-45min runtime)
+    shell: cd /root/openshift-ansible && ansible-playbook -i /root/aws-hosts /root/openshift-ansible/playbooks/deploy_cluster.yml
     register: ocp_cmd
-    no_log: true
-    ignore_errors: true
-    
-  - name: print error
-    debug: "msg={{ ocp_cmd }}"
-    failed_when: ocp_cmd.rc > 0
-   
+    ignore_errors: true 
+
+  - name: oc deploy report
+    debug: "msg={{ ocp_cmd.stdout_lines }}"
+
+  - fail: "msg={{ ocp_cmd.stderr }}"
+    when: ocp_cmd.rc > 0
+
+  - name: configure ocp AiO cluster
+    shell: chmod +x /etc/openshift-dev/config-ocp.sh && /etc/openshift-dev/config-ocp.sh
+    register: ocp_config_cmd
+
+  - debug: "msg={{ ocp_config_cmd.stdout_lines }}"
+
+  - fail:
+      msg: |
+        "Error occured running ocp-config.sh: "
+        "{{ ocp_config_cmd.stderr }}"
+    when: ocp_config_cmd.rc > 0
