@@ -42,7 +42,7 @@ Do the following configuration steps on whichever machine is running the playboo
 To deploy 3 aws ec2 instances:
 
 ```
-ansible-playbook playbooks/cluster-up.yaml -e "tag_name=<some name>"
+ansible-playbook -i inventories/aws playbooks/cluster-up.yaml -e "tag_name=<some name>"
 ```
 
 Optionally, to change the number of instances, set the `num_nodes` var:

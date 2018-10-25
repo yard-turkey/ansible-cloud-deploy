@@ -1,0 +1,3 @@
+template_ocp_inventory_file: ocp_inventory
+src_ocp_inventory_file: /tmp/ocp_inventory
+dest_ocp_inventory_file: /root/aws-hosts

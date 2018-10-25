@@ -1,4 +1,1 @@
----
 ssh_login: ec2-user
-src_ocp_inventory_file: ocp_inventory
-dest_ocp_inventory_file: /root/aws-hosts
