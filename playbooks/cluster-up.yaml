@@ -1,20 +1,21 @@
-# Passable Vars ('-e var1=val1 var2=val2')
+# Passable Vars (-e 'var1=val1 var2=val2')
 #   tag_name (Required)
 #   num_node (default: 3)
 
 # Infra play - setup aws resources
 - hosts: localhost 
   gather_facts: False
+  vars_prompt:
+  - name: "tag_name"
+    prompt: "Provide a name for instance(s)"
+    private: false
+  vars:
+    env_vars:
+    - AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY
 
   tasks:
-  - name: "Checking ssh-agent is running and '{{ ssh_key }}' key is loaded"
-    shell: "ssh-add -l | grep {{ ssh_key | quote }}"
-    ignore_errors: true
-    register: ssh_check_cmd
-  
-  - fail:
-      msg: "SSH prerequisite check failed.  This usually occures because `$ eval $(ssh-agent) && ssh-add path/to/key` has not been run"
-    when: ssh_check_cmd.rc > 0
+  - include_tasks: prerequisites.yaml
 
   - name: spin up instances
     ec2:
@@ -98,7 +99,7 @@
       regexp: 'PRIVATE_DNS_NAME'
       replace: "{{ hostvars[inventory_hostname].private_dns_name }}"
   
-  - name: export aws access key
+  - name:
     lineinfile:
       path: /root/.bashrc
       regexp: 'export AWS_ACCESS_KEY_ID=.*'

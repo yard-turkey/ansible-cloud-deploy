@@ -1,0 +1,12 @@
+- name: "verify environment variables"
+  include_tasks: env.yaml
+  loop: "{{ env_vars }}"
+
+- name: "Checking ssh-agent is running and '{{ ssh_key }}' key is loaded"
+  shell: "ssh-add -l | grep {{ ssh_key | quote }}"
+  ignore_errors: true
+  register: ssh_check_cmd
+
+- fail:
+    msg: "SSH prerequisite check failed.  This usually occurs because `$ eval $(ssh-agent) && ssh-add path/to/key` has not been run"
+  when: ssh_check_cmd.rc != 0
