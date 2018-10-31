@@ -13,8 +13,7 @@
     register: ec2_facts
 
   - add_host:
-      hostname: "{{ item.public_dns_name }}"
-      id: "{{ item.instance_id }}"
+      hostname: "{{ item.instance_id }}"
       region: "{{ region }}"
       group: ec2hosts
     loop: "{{ ec2_facts.instances }}"
@@ -28,14 +27,14 @@
   - name: stopping instances 
     ec2:
       region: "{{ hostvars[inventory_hostname].region }}"
-      instance_id: "{{ hostvars[inventory_hostname].id }}"
+      instance_id: "{{ inventory_hostname  }}"
       state: stopped
       wait: true
     delegate_to: localhost
 
   - name: marking instances for deletion
     ec2_tag:
-      resource: "{{ hostvars[inventory_hostname].id }}"
+      resource: "{{ inventory_hostname }}"
       region: "{{ hostvars[inventory_hostname].region }}"
       state: present 
       tags:
